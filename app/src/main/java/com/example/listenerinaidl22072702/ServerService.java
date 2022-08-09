@@ -43,10 +43,6 @@ public class ServerService extends Service {
     }
 
     IBinder iBinder = new IMyAidlInterface.Stub() {
-        @Override
-        public void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat, double aDouble, String aString) throws RemoteException {
-
-        }
 
         @Override
         public String update(String str) throws RemoteException {
@@ -57,15 +53,14 @@ public class ServerService extends Service {
         @Override
         public void registerCallBack(CallbackListener inter) throws RemoteException {
             System.out.println("map的key值："+callbackListenerMap.keySet().size());
-            System.out.println(inter);
+            Log.i(TAG," register Call back listener "+inter);
             callbackListenerMap.put(callbackListenerMap.keySet().size(),inter);
         }
 
         @Override
         public void requstIMyAidlInterface(int id) throws RemoteException {
             CallbackListener callbackListener = callbackListenerMap.get(id);
-            String str = callbackListener.onCallBack();
-            Log.i(TAG,str+"已接收");
+
         }
 
     };
