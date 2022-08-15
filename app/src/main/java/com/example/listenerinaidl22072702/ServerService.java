@@ -2,9 +2,19 @@ package com.example.listenerinaidl22072702;
 
 import android.app.Service;
 import android.content.Intent;
+import android.nfc.Tag;
+import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.Parcelable;
+import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,8 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 public class ServerService extends Service {
-    public final String TAG = this.getClass().getName().toString();
+    public static final String TAG = ServerService.class.getName();
     private Map<Integer,CallbackListener> callbackListenerMap = new HashMap<>();
+    private static final RemoteCallbackList<CallbackListener> client = new RemoteCallbackList<>();
 
     public ServerService() {
     }
@@ -33,6 +44,7 @@ public class ServerService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(TAG,"bindService启动onBind方法");
+//        return new Messenger(new MessengerHandler(/*Looper.myLooper()*/)).getBinder();
         return iBinder;
     }
 
@@ -41,6 +53,32 @@ public class ServerService extends Service {
         Log.i(TAG,"bindService启动onUnbind方法");
         return super.onUnbind(intent);
     }
+
+//    private static class MessengerHandler extends Handler{
+//
+////        public MessengerHandler(@NonNull Looper looper) {
+////            super(Looper.myLooper());
+////        }
+//
+//        @Override
+//        public void handleMessage(@NonNull Message msg) {
+//            if (msg.what == 1){//代表注册
+//
+//                client.register(msg.getData().getParcelable("msg1"));
+//
+////                Log.i("msg",msg.toString());
+////                Log.i("msg.getData()",msg.getData().toString());
+////                RemoteCallbackList
+////                MyListener listener = msg.getData().getParcelable("msg");
+////                Log.i("ServerService",msg.getData().getString("msg"));
+////                listener.update("服务器："+ServerService.TAG+"发来回调");
+//            }else if(msg.what == 2){//代表发送
+//                Log.i("msg.getData()",msg.getData().getParcelable("msg1"));
+//            }else {
+//                Log.i("ServerService","没收着");
+//            }
+//        }
+//    }
 
     IBinder iBinder = new IMyAidlInterface.Stub() {
 
@@ -52,15 +90,18 @@ public class ServerService extends Service {
 
         @Override
         public void registerCallBack(CallbackListener inter) throws RemoteException {
-            System.out.println("map的key值："+callbackListenerMap.keySet().size());
-            Log.i(TAG," register Call back listener "+inter);
-            callbackListenerMap.put(callbackListenerMap.keySet().size(),inter);
+            Log.i(TAG,"收到注册的对象:"+inter);
+            client.register(inter);
         }
 
         @Override
         public void requstIMyAidlInterface(int id) throws RemoteException {
-            CallbackListener callbackListener = callbackListenerMap.get(id);
-
+            Log.i(TAG,"获取第"+id+"个Listener");
+            int i = client.beginBroadcast();
+            for (int a = 0; a < i; a++) {
+                Log.i(TAG,"获取对象："+client.getBroadcastItem(a));
+            }
+            client.finishBroadcast();
         }
 
     };
